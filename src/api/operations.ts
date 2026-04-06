@@ -1,3 +1,4 @@
+import { getEncodedTextRun } from 'src/core/embedders/EncodedText';
 import { Color, setFillingColor, setStrokingColor } from 'src/api/colors';
 import {
   beginText,
@@ -8,14 +9,12 @@ import {
   fillAndStroke,
   lineTo,
   moveTo,
-  nextLine,
   popGraphicsState,
   pushGraphicsState,
   rotateAndSkewTextRadiansAndTranslate,
   rotateRadians,
   scale,
   setFontAndSize,
-  setLineHeight,
   setLineWidth,
   showText,
   skewRadians,
@@ -59,14 +58,7 @@ export const drawText = (
     beginText(),
     setFillingColor(options.color),
     setFontAndSize(options.font, options.size),
-    rotateAndSkewTextRadiansAndTranslate(
-      toRadians(options.rotate),
-      toRadians(options.xSkew),
-      toRadians(options.ySkew),
-      options.x,
-      options.y,
-    ),
-    showText(line),
+    ...drawEncodedText(line, options),
     endText(),
     popGraphicsState(),
   ].filter(Boolean) as PDFOperator[];
@@ -85,18 +77,16 @@ export const drawLinesOfText = (
     beginText(),
     setFillingColor(options.color),
     setFontAndSize(options.font, options.size),
-    setLineHeight(options.lineHeight),
-    rotateAndSkewTextRadiansAndTranslate(
-      toRadians(options.rotate),
-      toRadians(options.xSkew),
-      toRadians(options.ySkew),
-      options.x,
-      options.y,
-    ),
   ].filter(Boolean) as PDFOperator[];
 
   for (let idx = 0, len = lines.length; idx < len; idx++) {
-    operators.push(showText(lines[idx]), nextLine());
+    operators.push(
+      ...drawEncodedText(lines[idx], {
+        ...options,
+        x: asNumber(options.x),
+        y: asNumber(options.y) - asNumber(options.lineHeight) * idx,
+      }),
+    );
   }
 
   operators.push(endText(), popGraphicsState());
@@ -608,19 +598,53 @@ export const drawTextLines = (
 
   for (let idx = 0, len = lines.length; idx < len; idx++) {
     const { encoded, x, y } = lines[idx];
+    operators.push(...drawEncodedText(encoded, { ...options, x, y }));
+  }
+
+  operators.push(endText());
+
+  return operators;
+};
+
+const drawEncodedText = (
+  line: PDFHexString,
+  options: DrawTextOptions,
+): PDFOperator[] => {
+  const textRun = getEncodedTextRun(line);
+
+  if (!textRun) {
+    return [
+      rotateAndSkewTextRadiansAndTranslate(
+        toRadians(options.rotate),
+        toRadians(options.xSkew),
+        toRadians(options.ySkew),
+        options.x,
+        options.y,
+      ),
+      showText(line),
+    ];
+  }
+
+  const operators = [] as PDFOperator[];
+  const scale = asNumber(options.size) / 1000;
+
+  let x = 0;
+  let y = 0;
+  for (let idx = 0, len = textRun.glyphs.length; idx < len; idx++) {
+    const glyph = textRun.glyphs[idx];
     operators.push(
       rotateAndSkewTextRadiansAndTranslate(
         toRadians(options.rotate),
         toRadians(options.xSkew),
         toRadians(options.ySkew),
-        x,
-        y,
+        asNumber(options.x) + (x + glyph.xOffset) * scale,
+        asNumber(options.y) + (y + glyph.yOffset) * scale,
       ),
-      showText(encoded),
+      showText(glyph.encoded),
     );
+    x += glyph.xAdvance;
+    y += glyph.yAdvance;
   }
-
-  operators.push(endText());
 
   return operators;
 };

@@ -622,13 +622,6 @@
     "@types/yargs" "^15.0.0"
     chalk "^4.0.0"
 
-"@pdf-lib/fontkit@^1.1.0":
-  version "1.1.1"
-  resolved "https://registry.yarnpkg.com/@pdf-lib/fontkit/-/fontkit-1.1.1.tgz#f18473892b65e3253eb73f4569785abd2c03b1e0"
-  integrity sha512-KjMd7grNapIWS/Dm0gvfHEilSyAmeLvrEGVcqLGi0VYebuqqzTbgF29efCx7tvx+IEbG3zQciRSWl3GkUSvjZg==
-  dependencies:
-    pako "^1.0.6"
-
 "@pdf-lib/standard-fonts@^1.0.0":
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/@pdf-lib/standard-fonts/-/standard-fonts-1.0.0.tgz#8ba691c4421f71662ed07c9a0294b44528af2d7f"
@@ -1915,6 +1908,11 @@ har-validator@~5.1.3:
   dependencies:
     ajv "^6.5.5"
     har-schema "^2.0.0"
+
+harfbuzzjs@0.10.3:
+  version "0.10.3"
+  resolved "https://registry.yarnpkg.com/harfbuzzjs/-/harfbuzzjs-0.10.3.tgz#fcd53cc888548d16607f19e4cab8d1b55dceb939"
+  integrity sha512-GJnLUrgLMadlMYrBGEXwYEimObbysy3prWT4HyPpFQERvgTU/OZ+ReUlEPOum6w4RBtFXzXiCCmECOr4sz3qwQ==
 
 has-flag@^3.0.0:
   version "3.0.0"

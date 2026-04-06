@@ -1,7 +1,8 @@
-import fontkit, { Font, Glyph } from '@pdf-lib/fontkit';
 import fs from 'fs';
 
 import { createCmap } from 'src/core/embedders/CMap';
+import HarfBuzzEmbeddedFont from 'src/core/harfbuzz/HarfBuzzFont';
+import { Font, Glyph } from 'src/types/fontkit';
 import { byAscendingId, sortedUniq } from 'src/utils';
 
 const ubuntuFont = fs.readFileSync('./assets/fonts/ubuntu/Ubuntu-R.ttf');
@@ -26,8 +27,8 @@ const allGlyphsInFontSortedById = (font: Font) => {
 };
 
 describe(`createCmap`, () => {
-  it(`creates CMaps for embedded Ubuntu-R font files`, () => {
-    const font = fontkit.create(ubuntuFont);
+  it(`creates CMaps for embedded Ubuntu-R font files`, async () => {
+    const font = await HarfBuzzEmbeddedFont.create(ubuntuFont);
 
     const glyphs = allGlyphsInFontSortedById(font);
     const cmap = createCmap(glyphs, (g) => (g ? g.id : -1));
@@ -35,8 +36,8 @@ describe(`createCmap`, () => {
     expect(cmap).toEqual(String(ubuntuFontCmap));
   });
 
-  it(`creates CMaps for embedded SourceHanSerifJP-Regular font files`, () => {
-    const font = fontkit.create(sourceHansJpFont);
+  it(`creates CMaps for embedded SourceHanSerifJP-Regular font files`, async () => {
+    const font = await HarfBuzzEmbeddedFont.create(sourceHansJpFont);
 
     const glyphs = allGlyphsInFontSortedById(font);
     const cmap = createCmap(glyphs, (g) => (g ? g.id : -1));

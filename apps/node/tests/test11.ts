@@ -1,4 +1,3 @@
-import fontkit from '@pdf-lib/fontkit';
 import { Assets } from '..';
 import {
   last,
@@ -58,7 +57,6 @@ export default async (assets: Assets) => {
 
   const pdfDoc = await PDFDocument.create();
 
-  pdfDoc.registerFontkit(fontkit);
 
   const helveticaFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
   const helveticaBoldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);

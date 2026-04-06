@@ -48,8 +48,20 @@
 
 > **Learn more at [pdf-lib.js.org](https://pdf-lib.js.org)**
 
+## Fork Notice
+
+This repository is a fork of [`Hopding/pdf-lib`](https://github.com/Hopding/pdf-lib).
+
+We forked it to add HarfBuzz-based font shaping and subsetting so `pdf-lib` can support more languages and more complex scripts, while removing the previous Fontkit dependency for custom font handling.
+
+In this fork:
+
+- HarfBuzz is used for custom font embedding and shaping.
+- Fontkit is no longer required for custom font support.
+
 ## Table of Contents
 
+- [Fork Notice](#fork-notice)
 - [Features](#features)
 - [Motivation](#motivation)
 - [Usage Examples](#usage-examples)
@@ -642,9 +654,7 @@ const pdfBytes = await pdfDoc.save()
 
 ### Embed Font and Measure Text
 
-`pdf-lib` relies on a sister module to support embedding custom fonts: [`@pdf-lib/fontkit`](https://www.npmjs.com/package/@pdf-lib/fontkit). You must add the `@pdf-lib/fontkit` module to your project and register it using `pdfDoc.registerFontkit(...)` before embedding custom fonts.
-
-> **[See below for detailed installation instructions on installing `@pdf-lib/fontkit` as a UMD or NPM module.](#fontkit-installation)**
+`pdf-lib` can embed and subset custom OpenType/TrueType fonts directly. No extra font engine needs to be installed or registered before calling `pdfDoc.embedFont(...)`.
 
 _This example produces [this PDF](assets/pdfs/examples/embed_font_and_measure_text.pdf)_ (when [this font](assets/fonts/ubuntu/Ubuntu-R.ttf) is used for the `fontBytes` variable).
 
@@ -653,7 +663,6 @@ _This example produces [this PDF](assets/pdfs/examples/embed_font_and_measure_te
 <!-- prettier-ignore -->
 ```js
 import { PDFDocument, rgb } from 'pdf-lib'
-import fontkit from '@pdf-lib/fontkit'
 
 // This should be a Uint8Array or ArrayBuffer
 // This data can be obtained in a number of different ways
@@ -663,9 +672,6 @@ const fontBytes = ...
 
 // Create a new PDFDocument
 const pdfDoc = await PDFDocument.create()
-
-// Register the `fontkit` instance
-pdfDoc.registerFontkit(fontkit)
 
 // Embed our custom font in the document
 const customFont = await pdfDoc.embedFont(fontBytes)
@@ -1006,7 +1012,7 @@ const pdfBytes = await pdfDoc.save()
 
 ## Deno Usage
 
-`pdf-lib` fully supports the exciting new [Deno](https://deno.land/) runtime! All of the [usage examples](#usage-examples) work in Deno. The only thing you need to do is change the imports for `pdf-lib` and `@pdf-lib/fontkit` to use the [Skypack](https://www.skypack.dev/) CDN, because Deno requires all modules to be referenced via URLs.
+`pdf-lib` fully supports the exciting new [Deno](https://deno.land/) runtime! All of the [usage examples](#usage-examples) work in Deno. The only thing you need to do is change the import for `pdf-lib` to use the [Skypack](https://www.skypack.dev/) CDN, because Deno requires all modules to be referenced via URLs.
 
 > **See also [How to Create and Modify PDF Files in Deno With pdf-lib](https://medium.com/swlh/how-to-create-and-modify-pdf-files-in-deno-ffaad7099b0?source=friends_link&sk=3da183bb776d059df428eaea52102f19)**
 
@@ -1059,14 +1065,11 @@ import {
   rgb,
   StandardFonts,
 } from 'https://cdn.skypack.dev/pdf-lib@^1.11.1?dts';
-import fontkit from 'https://cdn.skypack.dev/@pdf-lib/fontkit@^1.0.0?dts';
 
 const url = 'https://pdf-lib.js.org/assets/ubuntu/Ubuntu-R.ttf';
 const fontBytes = await fetch(url).then((res) => res.arrayBuffer());
 
 const pdfDoc = await PDFDocument.create();
-
-pdfDoc.registerFontkit(fontkit);
 const customFont = await pdfDoc.embedFont(fontBytes);
 
 const page = pdfDoc.addPage();
@@ -1159,54 +1162,9 @@ var PDFDocument = PDFLib.PDFDocument;
 var rgb = PDFLib.rgb;
 ```
 
-## Fontkit Installation
+## Custom Fonts
 
-`pdf-lib` relies upon a sister module to support embedding custom fonts: [`@pdf-lib/fontkit`](https://www.npmjs.com/package/@pdf-lib/fontkit). You must add the `@pdf-lib/fontkit` module to your project and register it using `pdfDoc.registerFontkit(...)` before embedding custom fonts (see the [font embedding example](#embed-font-and-measure-text)). This module is not included by default because not all users need it, and it increases bundle size.
-
-Installing this module is easy. Just like `pdf-lib` itself, `@pdf-lib/fontkit` can be installed with `npm`/`yarn` or as a UMD module.
-
-### Fontkit NPM Module
-
-```bash
-# With npm
-npm install --save @pdf-lib/fontkit
-
-# With yarn
-yarn add @pdf-lib/fontkit
-```
-
-To register the `fontkit` instance:
-
-<!-- prettier-ignore -->
-```js
-import { PDFDocument } from 'pdf-lib'
-import fontkit from '@pdf-lib/fontkit'
-
-const pdfDoc = await PDFDocument.create()
-pdfDoc.registerFontkit(fontkit)
-```
-
-### Fontkit UMD Module
-
-The following builds are available:
-
-- https://unpkg.com/@pdf-lib/fontkit/dist/fontkit.umd.js
-- https://unpkg.com/@pdf-lib/fontkit/dist/fontkit.umd.min.js
-- https://cdn.jsdelivr.net/npm/@pdf-lib/fontkit/dist/fontkit.umd.js
-- https://cdn.jsdelivr.net/npm/@pdf-lib/fontkit/dist/fontkit.umd.min.js
-
-> **NOTE:** if you are using the CDN scripts in production, you should include a specific version number in the URL, for example:
->
-> - https://unpkg.com/@pdf-lib/fontkit@0.0.4/dist/fontkit.umd.min.js
-> - https://cdn.jsdelivr.net/npm/@pdf-lib/fontkit@0.0.4/dist/fontkit.umd.min.js
-
-When using a UMD build, you will have access to a global `window.fontkit` variable. To register the `fontkit` instance:
-
-<!-- prettier-ignore -->
-```js
-var pdfDoc = await PDFLib.PDFDocument.create()
-pdfDoc.registerFontkit(fontkit)
-```
+Embedding custom fonts no longer requires an external font engine. Load the font bytes and pass them directly to `pdfDoc.embedFont(...)`.
 
 ## Documentation
 
@@ -1237,14 +1195,12 @@ When working with PDFs, you will frequently come across the terms "character enc
   <!-- prettier-ignore -->
   ```js
   import { PDFDocument } from 'pdf-lib'
-  import fontkit from '@pdf-lib/fontkit'
 
   const url = 'https://pdf-lib.js.org/assets/ubuntu/Ubuntu-R.ttf'
   const fontBytes = await fetch(url).then((res) => res.arrayBuffer())
 
   const pdfDoc = await PDFDocument.create()
 
-  pdfDoc.registerFontkit(fontkit)
   const ubuntuFont = await pdfDoc.embedFont(fontBytes)
 
   const page = pdfDoc.addPage()
@@ -1289,7 +1245,6 @@ You can use an embedded font when filling form fields as follows:
 
 ```js
 import { PDFDocument } from 'pdf-lib';
-import fontkit from '@pdf-lib/fontkit';
 
 // Fetch the PDF with form fields
 const formUrl = 'https://pdf-lib.js.org/assets/dod_character.pdf';
@@ -1303,7 +1258,6 @@ const fontBytes = await fetch(fontUrl).then((res) => res.arrayBuffer());
 const pdfDoc = await PDFDocument.load(formBytes);
 
 // Embed the Ubuntu font
-pdfDoc.registerFontkit(fontkit);
 const ubuntuFont = await pdfDoc.embedFont(fontBytes);
 
 // Get two text fields from the form

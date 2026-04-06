@@ -1,4 +1,3 @@
-import fontkit from '@pdf-lib/fontkit';
 import fs from 'fs';
 import {
   EncryptedPDFError,
@@ -150,9 +149,6 @@ describe(`PDFDocument`, () => {
       const pdfDoc1 = await PDFDocument.create({ updateMetadata: false });
       const pdfDoc2 = await PDFDocument.create({ updateMetadata: false });
 
-      pdfDoc1.registerFontkit(fontkit);
-      pdfDoc2.registerFontkit(fontkit);
-
       await pdfDoc1.embedFont(customFont);
       await pdfDoc2.embedFont(customFont);
 
@@ -160,6 +156,13 @@ describe(`PDFDocument`, () => {
       const savedDoc2 = await pdfDoc2.save();
 
       expect(savedDoc1).toEqual(savedDoc2);
+    });
+
+    it(`embeds custom fonts without registering fontkit`, async () => {
+      const customFont = fs.readFileSync('assets/fonts/ubuntu/Ubuntu-B.ttf');
+      const pdfDoc = await PDFDocument.create({ updateMetadata: false });
+
+      await expect(pdfDoc.embedFont(customFont)).resolves.toBeDefined();
     });
   });
 

@@ -9,7 +9,6 @@ import {
   drawEllipse,
   PDFWidgetAnnotation,
 } from 'pdf-lib';
-import fontkit from '@pdf-lib/fontkit';
 
 import { fetchAsset, writePdf } from './assets';
 
@@ -21,7 +20,6 @@ export default async () => {
 
   const pdfDoc = await PDFDocument.load(fancyFieldsPdf);
 
-  pdfDoc.registerFontkit(fontkit);
   const ubuntuFont = await pdfDoc.embedFont(ubuntuR);
 
   const form = pdfDoc.getForm();

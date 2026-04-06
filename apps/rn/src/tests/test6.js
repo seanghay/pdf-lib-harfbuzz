@@ -1,4 +1,3 @@
-import fontkit from '@pdf-lib/fontkit';
 import { degrees, PDFDocument, rgb } from 'pdf-lib';
 
 import { fetchAsset, writePdf } from './assets';
@@ -22,7 +21,6 @@ export default async () => {
 
   const pdfDoc = await PDFDocument.load(inputPdfBytes);
 
-  pdfDoc.registerFontkit(fontkit);
 
   await pdfDoc.attach(usConstitutionPdfBytes, 'us_constitution.pdf', {
     mimeType: 'application/pdf',

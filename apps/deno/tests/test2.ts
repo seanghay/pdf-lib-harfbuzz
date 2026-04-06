@@ -1,4 +1,3 @@
-import fontkit from 'https://cdn.skypack.dev/@pdf-lib/fontkit@^1.0.0?dts';
 import { Assets } from '../index.ts';
 
 // @deno-types="../dummy.d.ts"
@@ -20,7 +19,6 @@ export default async (assets: Assets) => {
     updateMetadata: false,
   });
 
-  pdfDoc.registerFontkit(fontkit);
 
   const ubuntuFont = await pdfDoc.embedFont(fonts.ttf.ubuntu_r, {
     subset: true,

@@ -2,6 +2,9 @@ import fs from 'fs';
 import { PDFArray, PDFDocument, PDFName, StandardFonts } from 'src/index';
 
 const birdPng = fs.readFileSync('assets/images/greyscale_bird.png');
+const notoSansKhmerFont = fs.readFileSync(
+  'assets/fonts/noto_sans_khmer/NotoSansKhmer-Regular.ttf',
+);
 
 describe(`PDFDocument`, () => {
   describe(`getSize() method`, () => {
@@ -147,5 +150,22 @@ describe(`PDFDocument`, () => {
     const key2 = page2.node.normalizedEntries().Font.keys()[1];
     expect(key1).not.toEqual(key2);
     expect(page2.node.normalizedEntries().Font.keys()).toEqual([key1, key2]);
+  });
+
+  it(`drawText() positions shaped custom-font glyphs individually`, async () => {
+    const pdfDoc = await PDFDocument.create();
+
+    const font = await pdfDoc.embedFont(notoSansKhmerFont);
+    const page = pdfDoc.addPage();
+
+    page.drawText('សួស្តី', { font, x: 25, y: 50, size: 24 });
+
+    const contents = page.node.normalizedEntries().Contents!;
+    const stream = pdfDoc.context.lookup(contents.get(0)) as any;
+    const streamText = Buffer.from(stream.getUnencodedContents()).toString();
+
+    expect(streamText).not.toContain('<003B005F003B00B40055> Tj');
+    expect((streamText.match(/ Tj\n/g) || []).length).toBe(5);
+    expect((streamText.match(/ Tm\n/g) || []).length).toBe(5);
   });
 });

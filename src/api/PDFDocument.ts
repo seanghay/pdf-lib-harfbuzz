@@ -1,7 +1,6 @@
 import Embeddable from 'src/api/Embeddable';
 import {
   EncryptedPDFError,
-  FontkitNotRegisteredError,
   ForeignPageError,
   RemovePageFromEmptyDocumentError,
 } from 'src/api/errors';
@@ -47,7 +46,6 @@ import {
 } from 'src/api/PDFDocumentOptions';
 import PDFObject from 'src/core/objects/PDFObject';
 import PDFRef from 'src/core/objects/PDFRef';
-import { Fontkit } from 'src/types/fontkit';
 import { TransformationMatrix } from 'src/types/matrix';
 import {
   assertIs,
@@ -178,7 +176,6 @@ export default class PDFDocument {
   /** The default word breaks used in PDFPage.drawText */
   defaultWordBreaks: string[] = [' '];
 
-  private fontkit?: Fontkit;
   private pageCount: number | undefined;
   private readonly pageCache: Cache<PDFPage[]>;
   private readonly pageMap: Map<PDFPageLeaf, PDFPage>;
@@ -216,25 +213,22 @@ export default class PDFDocument {
   }
 
   /**
-   * Register a fontkit instance. This must be done before custom fonts can
-   * be embedded. See [here](https://github.com/Hopding/pdf-lib/tree/master#fontkit-installation)
-   * for instructions on how to install and register a fontkit instance.
+   * Register a font engine instance for backwards compatibility. This is no
+   * longer required before embedding custom fonts.
    *
    * > You do **not** need to call this method to embed standard fonts.
    *
    * For example:
    * ```js
    * import { PDFDocument } from 'pdf-lib'
-   * import fontkit from '@pdf-lib/fontkit'
-   *
    * const pdfDoc = await PDFDocument.create()
-   * pdfDoc.registerFontkit(fontkit)
+   * pdfDoc.registerFontkit({})
    * ```
    *
-   * @param fontkit The fontkit instance to be registered.
+   * @param fontkit Retained for backwards compatibility.
    */
-  registerFontkit(fontkit: Fontkit): void {
-    this.fontkit = fontkit;
+  registerFontkit(fontkit: any): void {
+    void fontkit;
   }
 
   /**
@@ -949,15 +943,9 @@ export default class PDFDocument {
       embedder = StandardFontEmbedder.for(font, customName);
     } else if (canBeConvertedToUint8Array(font)) {
       const bytes = toUint8Array(font);
-      const fontkit = this.assertFontkit();
       embedder = subset
-        ? await CustomFontSubsetEmbedder.for(
-            fontkit,
-            bytes,
-            customName,
-            features,
-          )
-        : await CustomFontEmbedder.for(fontkit, bytes, customName, features);
+        ? await CustomFontSubsetEmbedder.for(bytes, customName, features)
+        : await CustomFontEmbedder.for(bytes, customName, features);
     } else {
       throw new TypeError(
         '`font` must be one of `StandardFonts | string | Uint8Array | ArrayBuffer`',
@@ -1354,11 +1342,6 @@ export default class PDFDocument {
     this.context.trailerInfo.Info = this.context.register(newInfo);
 
     return newInfo;
-  }
-
-  private assertFontkit(): Fontkit {
-    if (!this.fontkit) throw new FontkitNotRegisteredError();
-    return this.fontkit;
   }
 
   private computePages = (): PDFPage[] => {

@@ -1,7 +1,6 @@
 import { Assets } from '..';
 import { PDFDocument } from '../../..';
 
-import fontkit from '@pdf-lib/fontkit';
 
 // Based on test14.ts
 const loadA = async (assets: Assets) => {
@@ -128,7 +127,6 @@ const loadC = async (assets: Assets) => {
 const loadD = async (assets: Assets) => {
   const pdfDoc = await PDFDocument.load(assets.pdfs.fancy_fields);
 
-  pdfDoc.registerFontkit(fontkit);
   const ubuntuFont = await pdfDoc.embedFont(assets.fonts.ttf.ubuntu_r);
 
   const form = pdfDoc.getForm();

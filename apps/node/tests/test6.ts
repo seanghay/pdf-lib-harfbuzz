@@ -1,4 +1,3 @@
-import fontkit from '@pdf-lib/fontkit';
 import { Assets } from '..';
 import { degrees, ParseSpeeds, PDFDocument, rgb } from '../../..';
 
@@ -10,7 +9,6 @@ export default async (assets: Assets) => {
     { parseSpeed: ParseSpeeds.Fastest },
   );
 
-  pdfDoc.registerFontkit(fontkit);
 
   await pdfDoc.attach(pdfs.us_constitution, 'us_constitution.pdf', {
     mimeType: 'application/pdf',

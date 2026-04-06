@@ -1,4 +1,3 @@
-import fontkit from 'https://cdn.skypack.dev/@pdf-lib/fontkit@^1.0.0?dts';
 
 import { Assets } from '../index.ts';
 
@@ -130,7 +129,6 @@ const loadC = async (assets: Assets) => {
 const loadD = async (assets: Assets) => {
   const pdfDoc = await PDFDocument.load(assets.pdfs.fancy_fields);
 
-  pdfDoc.registerFontkit(fontkit);
   const ubuntuFont = await pdfDoc.embedFont(assets.fonts.ttf.ubuntu_r);
 
   const form = pdfDoc.getForm();

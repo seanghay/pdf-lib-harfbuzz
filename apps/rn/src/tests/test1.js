@@ -1,4 +1,3 @@
-import fontkit from '@pdf-lib/fontkit';
 import {
   clip,
   clipEvenOdd,
@@ -44,7 +43,6 @@ export default async () => {
   pdfDoc.setCreationDate(new Date('2018-06-24T01:58:37.228Z'));
   pdfDoc.setModificationDate(new Date('2018-12-21T07:00:11.000Z'));
 
-  pdfDoc.registerFontkit(fontkit);
 
   await pdfDoc.attach(
     await fetchAsset('images/greyscale_bird.png'),

@@ -1,7 +1,12 @@
-import { Font, Fontkit, Glyph, TypeFeatures } from 'src/types/fontkit';
+import { Font, Glyph, TypeFeatures } from 'src/types/fontkit';
 
 import { createCmap } from 'src/core/embedders/CMap';
+import {
+  attachEncodedTextRun,
+  EncodedGlyph,
+} from 'src/core/embedders/EncodedText';
 import { deriveFontFlags } from 'src/core/embedders/FontFlags';
+import HarfBuzzEmbeddedFont from 'src/core/harfbuzz/HarfBuzzFont';
 import PDFHexString from 'src/core/objects/PDFHexString';
 import PDFRef from 'src/core/objects/PDFRef';
 import PDFString from 'src/core/objects/PDFString';
@@ -20,13 +25,27 @@ import {
  */
 class CustomFontEmbedder {
   static async for(
-    fontkit: Fontkit,
-    fontData: Uint8Array,
-    customName?: string,
+    fontDataOrFontkit: Uint8Array | unknown,
+    fontDataOrCustomName?: Uint8Array | string,
+    customNameOrFeatures?: string | TypeFeatures,
     fontFeatures?: TypeFeatures,
   ) {
-    const font = await fontkit.create(fontData);
-    return new CustomFontEmbedder(font, fontData, customName, fontFeatures);
+    const {
+      fontData,
+      customName,
+      resolvedFontFeatures,
+    } = parseCreateArgs(
+      fontDataOrFontkit,
+      fontDataOrCustomName,
+      customNameOrFeatures,
+      fontFeatures,
+    );
+    return new CustomFontEmbedder(
+      await HarfBuzzEmbeddedFont.create(fontData),
+      fontData,
+      customName,
+      resolvedFontFeatures,
+    );
   }
 
   readonly font: Font;
@@ -61,24 +80,37 @@ class CustomFontEmbedder {
    * Unicode, but embedded fonts use their own custom encodings)
    */
   encodeText(text: string): PDFHexString {
-    const { glyphs } = this.font.layout(text, this.fontFeatures);
+    const { glyphs, positions } = this.layout(text);
     const hexCodes = new Array(glyphs.length);
+    const encodedGlyphs = new Array(glyphs.length) as EncodedGlyph[];
+
     for (let idx = 0, len = glyphs.length; idx < len; idx++) {
-      hexCodes[idx] = toHexStringOfMinLength(glyphs[idx].id, 4);
+      const glyph = glyphs[idx];
+      const position = positions[idx];
+      const hexCode = toHexStringOfMinLength(glyph.id, 4);
+      hexCodes[idx] = hexCode;
+      encodedGlyphs[idx] = {
+        encoded: PDFHexString.of(hexCode),
+        xAdvance: position.xAdvance * this.scale,
+        yAdvance: position.yAdvance * this.scale,
+        xOffset: position.xOffset * this.scale,
+        yOffset: position.yOffset * this.scale,
+      };
     }
-    return PDFHexString.of(hexCodes.join(''));
+
+    return attachEncodedTextRun(PDFHexString.of(hexCodes.join('')), {
+      glyphs: encodedGlyphs,
+      advanceWidth: sumPositionValues(positions, 'xAdvance') * this.scale,
+      advanceHeight: sumPositionValues(positions, 'yAdvance') * this.scale,
+    });
   }
 
   // The advanceWidth takes into account kerning automatically, so we don't
   // have to do that manually like we do for the standard fonts.
   widthOfTextAtSize(text: string, size: number): number {
-    const { glyphs } = this.font.layout(text, this.fontFeatures);
-    let totalWidth = 0;
-    for (let idx = 0, len = glyphs.length; idx < len; idx++) {
-      totalWidth += glyphs[idx].advanceWidth * this.scale;
-    }
-    const scale = size / 1000;
-    return totalWidth * scale;
+    const { positions } = this.layout(text);
+    const totalWidth = sumPositionValues(positions, 'xAdvance') * this.scale;
+    return totalWidth * (size / 1000);
   }
 
   heightOfFontAtSize(
@@ -207,6 +239,11 @@ class CustomFontEmbedder {
     return glyph ? glyph.id : -1;
   }
 
+  protected layout(text: string) {
+    const { glyphs, positions } = this.font.layout(text, this.fontFeatures);
+    return { glyphs, positions };
+  }
+
   protected computeWidths(): (number | number[])[] {
     const glyphs = this.glyphCache.access();
 
@@ -247,3 +284,43 @@ class CustomFontEmbedder {
 }
 
 export default CustomFontEmbedder;
+
+const sumPositionValues = (
+  positions: {
+    xAdvance: number;
+    yAdvance: number;
+    xOffset: number;
+    yOffset: number;
+  }[],
+  key: 'xAdvance' | 'yAdvance',
+) => {
+  let total = 0;
+  for (let idx = 0, len = positions.length; idx < len; idx++) {
+    total += positions[idx][key];
+  }
+  return total;
+};
+
+const parseCreateArgs = (
+  fontDataOrFontkit: Uint8Array | unknown,
+  fontDataOrCustomName?: Uint8Array | string,
+  customNameOrFeatures?: string | TypeFeatures,
+  fontFeatures?: TypeFeatures,
+) => {
+  if (fontDataOrFontkit instanceof Uint8Array) {
+    return {
+      fontData: fontDataOrFontkit,
+      customName:
+        typeof fontDataOrCustomName === 'string'
+          ? fontDataOrCustomName
+          : undefined,
+      resolvedFontFeatures: customNameOrFeatures as TypeFeatures | undefined,
+    };
+  }
+
+  return {
+    fontData: fontDataOrCustomName as Uint8Array,
+    customName: customNameOrFeatures as string | undefined,
+    resolvedFontFeatures: fontFeatures,
+  };
+};

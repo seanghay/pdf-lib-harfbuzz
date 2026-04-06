@@ -4,7 +4,7 @@
     <meta
       http-equiv="Content-Security-Policy"
       content="
-        default-src 'self' 'unsafe-inline' blob: resource: https://unpkg.com/@pdf-lib/fontkit/dist/fontkit.umd.js;
+        default-src 'self' 'unsafe-inline' blob: resource:;
         object-src 'self' blob:;
         frame-src 'self' blob:;
       "
@@ -16,10 +16,6 @@
     <title>Test 17</title>
     <script type="text/javascript" src="/dist/pdf-lib.js"></script>
     <script type="text/javascript" src="/apps/web/utils.js"></script>
-    <script
-      type="text/javascript"
-      src="https://unpkg.com/@pdf-lib/fontkit/dist/fontkit.umd.js"
-    ></script>
   </head>
 
   <body>
@@ -68,7 +64,6 @@
 
       const pdfDoc = await PDFDocument.load(fancyFieldsPdf);
 
-      pdfDoc.registerFontkit(fontkit);
       const ubuntuFont = await pdfDoc.embedFont(ubuntuR);
 
       const form = pdfDoc.getForm();

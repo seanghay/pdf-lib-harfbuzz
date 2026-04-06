@@ -13,7 +13,7 @@ export class EncryptedPDFError extends Error {
 export class FontkitNotRegisteredError extends Error {
   constructor() {
     const msg =
-      'Input to `PDFDocument.embedFont` was a custom font, but no `fontkit` instance was found. You must register a `fontkit` instance with `PDFDocument.registerFontkit(...)` before embedding custom fonts.';
+      '`PDFDocument.registerFontkit(...)` is retained for backwards compatibility, but custom font embedding no longer requires a separate fontkit instance. This error should no longer be thrown.';
     super(msg);
   }
 }

@@ -1,4 +1,3 @@
-import fontkit from 'https://cdn.skypack.dev/@pdf-lib/fontkit@^1.0.0?dts';
 import { Assets } from '../index.ts';
 
 // @deno-types="../dummy.d.ts"
@@ -45,7 +44,6 @@ export default async (assets: Assets) => {
   pdfDoc.setCreationDate(new Date('2018-06-24T01:58:37.228Z'));
   pdfDoc.setModificationDate(new Date('2018-12-21T07:00:11.000Z'));
 
-  pdfDoc.registerFontkit(fontkit);
 
   await pdfDoc.attach(assets.images.png.greyscale_bird, 'bird.png', {
     mimeType: 'image/png',

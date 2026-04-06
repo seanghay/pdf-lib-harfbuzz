@@ -1,4 +1,3 @@
-import fontkit from 'https://cdn.skypack.dev/@pdf-lib/fontkit@^1.0.0?dts';
 import { Assets } from '../index.ts';
 
 // @deno-types="../dummy.d.ts"
@@ -60,7 +59,6 @@ export default async (assets: Assets) => {
 
   const pdfDoc = await PDFDocument.create();
 
-  pdfDoc.registerFontkit(fontkit);
 
   const helveticaFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
   const helveticaBoldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
